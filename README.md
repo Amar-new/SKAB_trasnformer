@@ -72,10 +72,10 @@ From the repository root:
 
 ```bash
 # Task 1 — anomaly detection
-python scripts/run_task1.py --data-dir data/SKAB
+python scripts/run_task1.py --data-dir data
 
 # Task 2 — retrieval of similar historical episodes
-python scripts/run_task2.py --data-dir data/SKAB
+python scripts/run_task2.py --data-dir data
 ```
 
 Common flags: `--epochs`, `--sup-epochs`, `--seed`, `--data-dir`. Omit `--data-dir`
