@@ -44,6 +44,9 @@ class Config:
     k_list: Tuple[int, ...] = (1, 5, 10)
     faults: Tuple[str, ...] = ("valve1", "valve2", "other")
 
+    # --- checkpoint ---
+    checkpoint_path: str = "task1_model.pt"
+
     @property
     def Np(self) -> int:               # patches per sensor
         return self.W // self.P

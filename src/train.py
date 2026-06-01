@@ -32,10 +32,13 @@ def train_reconstruction(model: TinyTSAutoencoder, Ptr, Pva, cfg: Config, device
     best, best_state, bad = float("inf"), None, 0
     for ep in range(cfg.epochs):
         model.train()
+        tot, nb = 0.0, 0
         for (xb,) in loader:
             xb = xb.to(device)
             loss = mse(xb)
             opt.zero_grad(); loss.backward(); opt.step()
+            tot += loss.item(); nb += 1
+        tl = tot / max(nb, 1)
         model.eval()
         with torch.no_grad():
             vl = mse(va).item()
@@ -46,10 +49,10 @@ def train_reconstruction(model: TinyTSAutoencoder, Ptr, Pva, cfg: Config, device
         else:
             bad += 1
         if verbose and (ep % 25 == 0 or ep == cfg.epochs - 1):
-            print(f"[recon] epoch {ep:3d} | val MSE {vl:.4f}")
+            print(f"[recon] epoch {ep:3d} | train MSE {tl:.4f} | val MSE {vl:.4f}")
         if bad >= cfg.patience:
             if verbose:
-                print(f"[recon] early stop @ {ep} (best {best:.4f})")
+                print(f"[recon] early stop @ {ep} (best val {best:.4f})")
             break
     if best_state is not None:
         model.load_state_dict(best_state)

@@ -9,6 +9,7 @@ normal segments look anomalous (see README / report).
 import os
 import glob
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 from src.config import Config
@@ -28,10 +29,6 @@ def fault_of(path: str) -> str:
 def load_skab(data_dir: str):
     """Return (files, sensor_cols). `files` is a list of dicts with keys
     vals [T, C] float32, anom [T] int, fault str, name str, fid int."""
-    try:
-        import pandas as pd
-    except ImportError as e:
-        raise RuntimeError("pandas is required to read SKAB CSVs") from e
 
     paths = sorted(glob.glob(os.path.join(data_dir, "**", "*.csv"), recursive=True))
     files, cols0 = [], None

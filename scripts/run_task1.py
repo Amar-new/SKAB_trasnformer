@@ -15,7 +15,7 @@ from src.config import Config
 from src.data import get_data, fit_scalers
 from src.features import build_normal_pool
 from src.model import TinyTSAutoencoder, count_params
-from src.train import train_reconstruction, get_device
+from src.train import train_reconstruction, save_model, get_device
 from src.embed import embed_file
 from src.anomaly import score_file, detection_metrics, f1_at_threshold
 
@@ -26,12 +26,13 @@ def parse_args():
     ap.add_argument("--data-dir", default=c.data_dir)
     ap.add_argument("--epochs", type=int, default=c.epochs)
     ap.add_argument("--seed", type=int, default=c.seed)
+    ap.add_argument("--model-path", default=c.checkpoint_path)
     return ap.parse_args()
 
 
 def main():
     a = parse_args()
-    cfg = Config(data_dir=a.data_dir, epochs=a.epochs, seed=a.seed)
+    cfg = Config(data_dir=a.data_dir, epochs=a.epochs, seed=a.seed, checkpoint_path=a.model_path)
     device = get_device()
     print(f"[task1] device={device}  W={cfg.W} P={cfg.P} dim={cfg.d_model}")
 
@@ -43,6 +44,8 @@ def main():
     model = TinyTSAutoencoder(C, cfg).to(device)
     print(f"[task1] parameters: {count_params(model):,}")
     train_reconstruction(model, Ptr, Pva, cfg, device)
+    save_model(model, None, cfg.checkpoint_path)
+    print(f"[task1] model saved -> {cfg.checkpoint_path}")
 
     # per-file embedding-kNN scoring
     Y, EMB, REC, PRED = [], [], [], []

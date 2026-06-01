@@ -18,7 +18,7 @@ from src.config import Config
 from src.data import get_data, fit_scalers
 from src.features import build_normal_pool, collect_anomalous_windows
 from src.model import TinyTSAutoencoder, make_metric_head, count_params
-from src.train import train_reconstruction, train_supcon, get_device
+from src.train import train_reconstruction, train_supcon, save_model, load_model, get_device
 from src.embed import build_window_index, embed_file
 from src.retrieval import evaluate_retrieval, build_episode_gallery, split_files_by_fault
 
@@ -30,6 +30,7 @@ def parse_args():
     ap.add_argument("--epochs", type=int, default=c.epochs)
     ap.add_argument("--sup-epochs", type=int, default=c.sup_epochs)
     ap.add_argument("--seed", type=int, default=c.seed)
+    ap.add_argument("--model-path", default=c.checkpoint_path)
     return ap.parse_args()
 
 
@@ -43,7 +44,8 @@ def show(title, m):
 
 def main():
     a = parse_args()
-    cfg = Config(data_dir=a.data_dir, epochs=a.epochs, sup_epochs=a.sup_epochs, seed=a.seed)
+    cfg = Config(data_dir=a.data_dir, epochs=a.epochs, sup_epochs=a.sup_epochs, seed=a.seed,
+                 checkpoint_path=a.model_path)
     device = get_device()
     print(f"[task2] device={device}")
 
@@ -53,7 +55,14 @@ def main():
 
     model = TinyTSAutoencoder(C, cfg).to(device)
     print(f"[task2] parameters: {count_params(model):,}")
-    train_reconstruction(model, Ptr, Pva, cfg, device)
+    if os.path.exists(cfg.checkpoint_path):
+        load_model(model, None, cfg.checkpoint_path, device)
+        print(f"[task2] loaded Task 1 model from {cfg.checkpoint_path} (skipping reconstruction training)")
+    else:
+        print(f"[task2] no checkpoint at '{cfg.checkpoint_path}'; training reconstruction from scratch")
+        train_reconstruction(model, Ptr, Pva, cfg, device)
+        save_model(model, None, cfg.checkpoint_path)
+        print(f"[task2] model saved -> {cfg.checkpoint_path}")
 
     # file-disjoint split + supervised-contrastive metric on TRAIN files
     train_fids, eval_fids = split_files_by_fault(files, cfg)
